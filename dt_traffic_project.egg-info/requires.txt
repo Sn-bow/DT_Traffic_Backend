@@ -1,0 +1,17 @@
+flask<4.0,>=3.0
+python-dotenv<2.0,>=1.0
+pandas<3.0,>=2.2
+numpy<3.0,>=1.26
+requests<3.0,>=2.32
+pyarrow<25.0,>=22.0
+scikit-learn<2.0,>=1.5
+lightgbm<5.0,>=4.5
+joblib<2.0,>=1.4
+pyproj<4.0,>=3.6
+pandas-stubs~=2.3.3
+
+[dev]
+pytest<9.0,>=8.0
+
+[geo]
+geopandas<2.0,>=0.14
