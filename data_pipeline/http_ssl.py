@@ -4,13 +4,13 @@ import os
 from pathlib import Path
 from typing import Any
 
-import requests
+import requests # python에서 HTTP 요청을 보내는 라이브러리 requests.get("https://www.naver.com") = response | requests.Session() = session => session.get,session.get,session.get,... 계속 연결
 
 from data_pipeline.build_train_table import PROJECT_ROOT
 
 # ssl_verify → SSL 인증서 검증 설정 / SSL 인증서 검증 설정을 최종적으로 결정하는 함수
 def resolve_ssl_verify(ca_bundle: str | Path | bool | None = None, no_ssl_verify: bool = False) -> str | bool | None:
-    # 사용할 CA 인증서 파일 ca_bundle : 상대방의 신원을 검증하기 위해서 사용하는 파일 
+    # 사용할 CA 인증서 파일 ca_bundle : 상대방의 신원을 검증하기 위해서 사용하는 파일 | SSL 검증을 끌 것인가? 의 여부 no_ssl_verify = False 가 검증을 하겠다는 뜻임
     if no_ssl_verify:
         return False
     
@@ -18,16 +18,16 @@ def resolve_ssl_verify(ca_bundle: str | Path | bool | None = None, no_ssl_verify
         return ca_bundle
     
     if ca_bundle:
-        return _resolve_ca_path(ca_bundle)
+        return _resolve_ca_path(ca_bundle) # ca_bundle 가 경로나 str 경로일 경우 절대 경로로 반환 
     
     env_value = os.getenv("DT_TRAFFIC_CA_BUNDLE") or os.getenv("REQUESTS_CA_BUNDLE") or os.getenv("CURL_CA_BUNDLE")
 
     if env_value:
-        return _resolve_ca_path(env_value)
+        return _resolve_ca_path(env_value) # .env에서 인증서 경로가 있을경우 절대 경로로 변환 
     
-    return None
+    return None # 인증서 없을경우 None 반환 
 
-def apply_ssl_verify(session: Any, verify: str | bool | None) -> None:
+def apply_ssl_verify(session: Any, verify: str | bool | None) -> None: # SSL 검증설정을 적용하는 함수
     if verify is not None and hasattr(session, "verify"):
         session.verify = verify
 
@@ -58,3 +58,30 @@ def ssl_error_message(url: str, error: BaseException, verify: str | bool | None)
         "임시로 사용하는 최후의 수단으로 사용하세요.\n\n"
         f"현재 SSL 인증서 검증 설정: {verify_text}"
     )
+
+# SSL 진단 기능이 포함된 HTTP 요청 함수
+def request_with_ssl_diagnostics(session: requests.Session, method: str, url: str, *, timeout: int, verify:str | bool | None, **kwargs: Any) -> requests.Response:
+    try:
+        if verify is None:
+            return session.request(method, url, timeour=timeout, **kwargs)
+        return session.request(method, url, timeout=timeout, verify=verify, **kwargs)
+    except requests.exceptions.SSLError as exc:
+        raise RuntimeError(ssl_error_message(url, exc, verify)) from exc
+    
+def warn_if_ssl_verification_disabled(verify: str | bool | None) -> None:
+    if verify is False:
+        print(
+            "[경고] SSL 인증서 검증이 비활성화되어 있습니다. "
+            "이 옵션은 신뢰할 수 있는 네트워크에서만 임시로 사용하세요. "
+            "가능하면 `--ca-bundle` 옵션이나 "
+            "`REQUESTS_CA_BUNDLE` 환경 변수를 사용하여 "
+            "신뢰할 수 있는 CA 인증서를 지정하는 것을 권장합니다."
+        )
+
+def _resolve_ca_path(value: str | Path) -> str:
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        path = PROJECT_ROOT / path
+    if not path.exists():
+        raise FileNotFoundError(f"CA bundle file does not exist: {path}")
+    return str(path)
