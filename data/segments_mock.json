@@ -1,0 +1,22 @@
+{
+  "segments": [
+    {
+      "segmentId": "SEG-001",
+      "linkId": "1210065300",
+      "roadName": "학습용 도로 1",
+      "currentSpeed": 42.5,
+      "congestionGrade": "서행",
+      "color": "yellow",
+      "geometry": [
+        {
+          "Latitude": 37.5665,
+          "Longitude": 126.9780
+        },
+        {
+          "Latitude": 37.5670,
+          "Longitude": 126.9790
+        }
+      ]
+    }
+  ]
+}
