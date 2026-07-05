@@ -59,16 +59,18 @@ def ssl_error_message(url: str, error: BaseException, verify: str | bool | None)
         f"현재 SSL 인증서 검증 설정: {verify_text}"
     )
 
-# SSL 진단 기능이 포함된 HTTP 요청 함수
+# SSL 진단 기능이 포함된 HTTP 요청 함수 | method -> Http method ex) GET, POST | URL 요청할 주소 |
+# 파라미터에서 * 이후 작성되는 파라미터 값을 전달할때는 이름을 무조건 작성 후 전달해야한다 session, "get", "https://' *이후 timeout = 30, verify=True
+# *kwargs = 추가 옵션을 모두 받는다 => headers = , json= , params = ...
 def request_with_ssl_diagnostics(session: requests.Session, method: str, url: str, *, timeout: int, verify:str | bool | None, **kwargs: Any) -> requests.Response:
-    try:
-        if verify is None:
-            return session.request(method, url, timeour=timeout, **kwargs)
+    try: #HTTP 요청을 보내고, SSL 인증서 오류가 발생하면 사용자가 이해하기 쉬운 RuntimeError로 변환 해서 알려주는 함수
+        if verify is None: # verify 는 SSL 인증서를 검증(확인)할 것인가 에 대한 여부를 체크 하는 변수 => True = 체크할 것이다, False => 체크 안할것이다
+            return session.request(method, url, timeout=timeout, **kwargs)
         return session.request(method, url, timeout=timeout, verify=verify, **kwargs)
-    except requests.exceptions.SSLError as exc:
-        raise RuntimeError(ssl_error_message(url, exc, verify)) from exc
+    except requests.exceptions.SSLError as exc: #SSL 인증서가 잘못 되었을때 나타나는 에러
+        raise RuntimeError(ssl_error_message(url, exc, verify)) from exc # RunTimeError 이르키기 ssl_error_message(url, exc, verify)) from exc
     
-def warn_if_ssl_verification_disabled(verify: str | bool | None) -> None:
+def warn_if_ssl_verification_disabled(verify: str | bool | None) -> None: # SSL 검증이 꺼져있으면 경고를 출력하는 함수
     if verify is False:
         print(
             "[경고] SSL 인증서 검증이 비활성화되어 있습니다. "
@@ -78,10 +80,10 @@ def warn_if_ssl_verification_disabled(verify: str | bool | None) -> None:
             "신뢰할 수 있는 CA 인증서를 지정하는 것을 권장합니다."
         )
 
-def _resolve_ca_path(value: str | Path) -> str:
-    path = Path(value).expanduser()
-    if not path.is_absolute():
-        path = PROJECT_ROOT / path
-    if not path.exists():
-        raise FileNotFoundError(f"CA bundle file does not exist: {path}")
+def _resolve_ca_path(value: str | Path) -> str: # CA 인증서 파일의 경로를 최종적으로 결정하는 내부 함수
+    path = Path(value).expanduser() # expanduser() 메서드는 ~ 를 실제 사용자 홈 폴더로 바꾼다.
+    if not path.is_absolute(): # 절대 경로가 아닐경우
+        path = PROJECT_ROOT / path # 절대경로로 만들어줌
+    if not path.exists(): # exists() 파일이 존재하지 않으면
+        raise FileNotFoundError(f"CA bundle file does not exist: {path}") # 에러 발생 시키기 FileNotFoundError
     return str(path)

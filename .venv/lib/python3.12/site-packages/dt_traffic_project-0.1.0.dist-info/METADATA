@@ -1,0 +1,20 @@
+Metadata-Version: 2.4
+Name: dt-traffic-project
+Version: 0.1.0
+Summary: Traffic prediction digital twin server and data pipeline
+Requires-Python: >=3.10
+Requires-Dist: flask<4.0,>=3.0
+Requires-Dist: python-dotenv<2.0,>=1.0
+Requires-Dist: pandas<3.0,>=2.2
+Requires-Dist: numpy<3.0,>=1.26
+Requires-Dist: requests<3.0,>=2.32
+Requires-Dist: pyarrow<25.0,>=22.0
+Requires-Dist: scikit-learn<2.0,>=1.5
+Requires-Dist: lightgbm<5.0,>=4.5
+Requires-Dist: joblib<2.0,>=1.4
+Requires-Dist: pyproj<4.0,>=3.6
+Requires-Dist: pandas-stubs~=2.3.3
+Provides-Extra: dev
+Requires-Dist: pytest<9.0,>=8.0; extra == "dev"
+Provides-Extra: geo
+Requires-Dist: geopandas<2.0,>=0.14; extra == "geo"
